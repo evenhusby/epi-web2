@@ -1,5 +1,5 @@
-import * as d3 from 'd3';
-import { LAND, poly } from './land';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import { t, type Lang } from './i18n';
 
 interface PortProps {
@@ -22,7 +22,21 @@ interface Summary {
   nox_reduced_tonnes_ytd: number;
 }
 
+// Always-labelled ports; the selected port (if any) is added on top of this.
 const LABELLED = ['Bergen', 'Reykjavík', 'Kirkwall', 'Tromsø', 'Oslo', 'Trondheim'];
+
+// Design tokens (src/styles/global.css) duplicated here as literals -- Mapbox
+// GL paint/layout properties can't read CSS custom properties.
+const COLOR_GRONN = '#1E5C48';
+const COLOR_PAPIR = '#FDFCF9';
+const COLOR_BLEKK = '#26332F';
+
+// light-v11 layers that read as visual noise against the editorial design
+// (streets/POI/transit/building clutter). Hides anything whose id matches.
+// This is a blunt first pass, not a substitute for a proper custom Mapbox
+// Studio style matching the ink/paper palette exactly -- revisit if the
+// look needs to be tighter than this gets it.
+const NOISY_LAYER_PATTERN = /poi|transit|building|road-label|road-number|road-exit|path-pedestrian|contour|hillshade|natural-line-label|water-line-label|water-point-label/i;
 
 function distBars(dist: number[]): string {
   const maxBand = Math.max(...dist);
@@ -34,11 +48,19 @@ function distBars(dist: number[]): string {
     .join('');
 }
 
+function simplifyBaseStyle(map: mapboxgl.Map) {
+  for (const layer of map.getStyle()?.layers ?? []) {
+    if (NOISY_LAYER_PATTERN.test(layer.id)) {
+      map.setLayoutProperty(layer.id, 'visibility', 'none');
+    }
+  }
+}
+
 export async function initMapApp(root: HTMLElement) {
   const lang = (root.dataset.lang as Lang) || 'no';
   const nf = () => new Intl.NumberFormat(lang === 'no' ? 'nb-NO' : 'en-GB');
 
-  const svg = d3.select<SVGSVGElement, unknown>(root.querySelector('#map')!);
+  const mapContainer = root.querySelector<HTMLElement>('#map')!;
   const statBand = root.querySelector('#statBand')!;
   const panel = root.querySelector('#portPanel')!;
 
@@ -73,84 +95,6 @@ export async function initMapApp(root: HTMLElement) {
     };
   }
 
-  function drawMap() {
-    svg.selectAll('*').remove();
-    const node = svg.node()!;
-    const w = node.clientWidth;
-    const h = node.clientHeight;
-    const projection = d3.geoMercator().fitExtent(
-      [
-        [24, 20],
-        [w - 24, h - 20],
-      ],
-      { type: 'FeatureCollection', features: [poly([[-26, 55], [33, 55], [33, 71.5], [-26, 71.5], [-26, 55]])] } as any
-    );
-    const path = d3.geoPath(projection as any);
-
-    const grat = d3.geoGraticule().step([5, 5]);
-    svg
-      .append('path')
-      .attr('d', path(grat() as any))
-      .attr('fill', 'none')
-      .attr('stroke', '#C9C4B4')
-      .attr('stroke-opacity', 0.45)
-      .attr('stroke-width', 0.6)
-      .attr('stroke-dasharray', '1 4');
-
-    svg
-      .append('g')
-      .selectAll('path')
-      .data(LAND.features)
-      .join('path')
-      .attr('d', path as any)
-      .attr('fill', 'var(--sjo)')
-      .attr('stroke', 'var(--blekk)')
-      .attr('stroke-width', 1.1);
-
-    const g = svg.append('g');
-    const dots = g
-      .selectAll<SVGGElement, PortFeature>('g.port')
-      .data(ports.features)
-      .join('g')
-      .attr('class', 'port')
-      .attr('transform', (d) => `translate(${projection(d.geometry.coordinates as [number, number])})`);
-
-    dots
-      .filter((d) => d === selected)
-      .append('circle')
-      .attr('r', 10)
-      .attr('fill', 'none')
-      .attr('stroke', 'var(--blekk)')
-      .attr('stroke-width', 1);
-
-    dots
-      .append('circle')
-      .attr('class', 'port-dot')
-      .attr('r', (d) => (d === selected ? 6.5 : 5))
-      .attr('fill', 'var(--gronn)')
-      .attr('stroke', 'var(--papir)')
-      .attr('stroke-width', 1.2)
-      .on('mouseover', function () {
-        d3.select(this).attr('r', 6.5);
-      })
-      .on('mouseout', function (_e, d) {
-        d3.select(this).attr('r', d === selected ? 6.5 : 5);
-      })
-      .on('click', (_e, d) => {
-        selected = d;
-        drawMap();
-        renderPanel(d);
-      });
-
-    dots
-      .filter((d) => LABELLED.includes(d.properties.name) || d === selected)
-      .append('text')
-      .attr('class', 'port-label')
-      .attr('y', 20)
-      .attr('text-anchor', 'middle')
-      .text((d) => d.properties.name);
-  }
-
   function panelRows(a: { calls_ytd: number; avg_score: number; ops_share_pct: number; nox_reduced_ytd: number; score_distribution: number[] }) {
     return `
       <div class="pp-row"><span class="k">${t(lang, 'pp_calls')}</span><span class="v">${nf().format(a.calls_ytd)}</span></div>
@@ -180,15 +124,105 @@ export async function initMapApp(root: HTMLElement) {
       <h3>${pr.name}</h3>
       <div class="since">${t(lang, 'pp_since')} ${pr.member_since}</div>
       ${panelRows(pr)}`;
-    panel.querySelector('#ppBack')?.addEventListener('click', () => {
-      selected = null;
-      drawMap();
-      renderPanel(null);
-    });
+    panel.querySelector('#ppBack')?.addEventListener('click', () => select(null));
   }
 
-  window.addEventListener('resize', drawMap);
   renderStats();
-  drawMap();
-  renderPanel(selected);
+
+  const token = import.meta.env.PUBLIC_MAPBOX_TOKEN as string | undefined;
+  if (!token) {
+    mapContainer.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--grafitt);font-size:13px;text-align:center;padding:0 20px;">Map unavailable: PUBLIC_MAPBOX_TOKEN is not set.</div>`;
+    console.warn('PUBLIC_MAPBOX_TOKEN is not set -- see .env.example.');
+    renderPanel(null);
+    return;
+  }
+
+  mapboxgl.accessToken = token;
+
+  const bounds = ports.features.reduce(
+    (b, f) => b.extend(f.geometry.coordinates as [number, number]),
+    new mapboxgl.LngLatBounds()
+  );
+
+  const map = new mapboxgl.Map({
+    container: mapContainer,
+    style: 'mapbox://styles/mapbox/light-v11',
+    bounds,
+    fitBoundsOptions: { padding: 48 },
+    attributionControl: false,
+  });
+  map.addControl(new mapboxgl.AttributionControl({ compact: true }));
+  map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
+
+  function labelFilter(): mapboxgl.FilterSpecification {
+    const names = selected ? [...LABELLED, selected.properties.name] : LABELLED;
+    return ['in', ['get', 'name'], ['literal', names]];
+  }
+
+  function select(f: PortFeature | null) {
+    if (selected) {
+      map.setFeatureState({ source: 'ports', id: selected.properties.name }, { selected: false });
+    }
+    selected = f;
+    if (selected) {
+      map.setFeatureState({ source: 'ports', id: selected.properties.name }, { selected: true });
+    }
+    if (map.getLayer('ports-labels')) {
+      map.setFilter('ports-labels', labelFilter());
+    }
+    renderPanel(selected);
+  }
+
+  map.on('load', () => {
+    simplifyBaseStyle(map);
+
+    map.addSource('ports', {
+      type: 'geojson',
+      data: ports,
+      promoteId: 'name',
+    });
+
+    map.addLayer({
+      id: 'ports-circles',
+      type: 'circle',
+      source: 'ports',
+      paint: {
+        'circle-radius': ['case', ['boolean', ['feature-state', 'selected'], false], 6.5, 5],
+        'circle-color': COLOR_GRONN,
+        'circle-stroke-color': COLOR_PAPIR,
+        'circle-stroke-width': ['case', ['boolean', ['feature-state', 'selected'], false], 2, 1.2],
+      },
+    });
+
+    map.addLayer({
+      id: 'ports-labels',
+      type: 'symbol',
+      source: 'ports',
+      filter: labelFilter(),
+      layout: {
+        'text-field': ['get', 'name'],
+        'text-size': 12,
+        'text-offset': [0, 1.2],
+        'text-anchor': 'top',
+      },
+      paint: {
+        'text-color': COLOR_BLEKK,
+        'text-halo-color': COLOR_PAPIR,
+        'text-halo-width': 1.4,
+      },
+    });
+
+    map.on('mouseenter', 'ports-circles', () => {
+      map.getCanvas().style.cursor = 'pointer';
+    });
+    map.on('mouseleave', 'ports-circles', () => {
+      map.getCanvas().style.cursor = '';
+    });
+    map.on('click', 'ports-circles', (e) => {
+      const feature = e.features?.[0] as unknown as PortFeature | undefined;
+      if (feature) select(feature);
+    });
+
+    renderPanel(selected);
+  });
 }

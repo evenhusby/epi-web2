@@ -10,10 +10,12 @@
   },
   "dependencies": {
     "astro": "^4.16.0",
-    "d3": "^7.9.0"
+    "mapbox-gl": "^3.7.0"
   },
   "devDependencies": {
-    "@types/d3": "^7.4.3",
-    "@types/geojson": "^7946.0.14"
+    "@astrojs/check": "^0.9.10",
+    "@types/geojson": "^7946.0.14",
+    "@types/mapbox-gl": "^3.4.1",
+    "typescript": "^5.9.3"
   }
 }
