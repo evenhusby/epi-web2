@@ -1,0 +1,9 @@
+{
+  "generated_at": "2026-08-19T03:00:00Z",
+  "year": 2026,
+  "active_ports": 27,
+  "port_calls_ytd": 3412,
+  "sox_reduced_tonnes_ytd": 184,
+  "nox_reduced_tonnes_ytd": 1260,
+  "_note": "Placeholder data ported from epiport-prototype.html. Replace with the nightly export from epi_v2 per epiport-handoff.md."
+}

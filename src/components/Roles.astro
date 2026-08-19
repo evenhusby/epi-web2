@@ -1,0 +1,37 @@
+---
+import { t, type Lang } from '../lib/i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+---
+
+<section class="content" id="roller">
+  <div class="wrap">
+    <div class="eyebrow">{t(lang, 'roles_eyebrow')}</div>
+    <h2>{t(lang, 'roles_h2')}</h2>
+    <div class="roles">
+      <div class="role">
+        <div class="tag">{t(lang, 'role1_tag')}</div>
+        <div class="who">EPI AS</div>
+        <p>{t(lang, 'role1_p')}</p>
+      </div>
+      <div class="role">
+        <div class="tag">2019–2026</div>
+        <div class="who">DNV</div>
+        <p>{t(lang, 'role_dnv_p')}</p>
+      </div>
+      <div class="role">
+        <div class="tag">{t(lang, 'role2_tag')}</div>
+        <div class="who">OceanScore</div>
+        <p>{t(lang, 'role2_p')}</p>
+      </div>
+      <div class="role">
+        <div class="tag">{t(lang, 'role3_tag')}</div>
+        <div class="who">IAPH / ESI</div>
+        <p>{t(lang, 'role3_p')}</p>
+      </div>
+    </div>
+  </div>
+</section>

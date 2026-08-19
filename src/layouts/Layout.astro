@@ -1,0 +1,43 @@
+---
+import '../styles/global.css';
+import { t, type Lang } from '../lib/i18n';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+---
+
+<html lang={lang === 'no' ? 'no' : 'en'}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Environmental Port Index</title>
+  </head>
+  <body>
+    <header>
+      <div class="wrap header-inner">
+        <span class="brand-name">Environmental Port Index</span>
+        <nav>
+          <a href="#om">{t(lang, 'nav_about')}</a>
+          <a href="#roller">{t(lang, 'nav_roles')}</a>
+          <div class="lang-toggle">
+            <a href="/" class:list={{ active: lang === 'no' }} aria-current={lang === 'no' ? 'page' : undefined}>NO</a>
+            <a href="/en/" class:list={{ active: lang === 'en' }} aria-current={lang === 'en' ? 'page' : undefined}>EN</a>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <slot />
+
+    <footer>
+      <div class="wrap footer-inner">
+        <span>info@epiport.org · Bergen Havn, Nøstegaten 30, 5006 Bergen</span>
+        <span>{t(lang, 'footer_r')}</span>
+      </div>
+    </footer>
+  </body>
+</html>

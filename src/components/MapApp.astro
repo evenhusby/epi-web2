@@ -1,0 +1,27 @@
+---
+import { t, type Lang } from '../lib/i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+---
+
+<div id="mapApp" data-lang={lang}>
+  <div class="wrap stat-band" id="statBand"></div>
+
+  <div class="wrap map-section">
+    <div>
+      <svg id="map" role="img" aria-label="Kart over EPI-havner i Nord-Atlanteren"></svg>
+      <div class="map-caption">{t(lang, 'map_caption')}</div>
+    </div>
+    <div class="port-panel" id="portPanel"></div>
+  </div>
+</div>
+
+<script>
+  import { initMapApp } from '../lib/map-app';
+
+  const root = document.getElementById('mapApp');
+  if (root) initMapApp(root);
+</script>

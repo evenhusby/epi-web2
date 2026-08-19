@@ -1,0 +1,121 @@
+:root {
+  --papir: #FDFCF9;
+  --blekk: #26332F;
+  --blekk-lys: #55605B;
+  --grafitt: #6B7570;
+  --gronn: #1E5C48;
+  --linje: #C9C4B4;
+  --linje-lys: #E5E1D6;
+  --sjo: #F4F2EA;
+  --font-display: 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-body);
+  color: var(--blekk);
+  background: var(--papir);
+  line-height: 1.65;
+}
+
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 40px; }
+
+header { background: var(--papir); position: sticky; top: 0; z-index: 20; }
+.header-inner {
+  display: flex; align-items: baseline; justify-content: space-between;
+  padding: 20px 0 16px; border-bottom: 2px solid var(--blekk);
+}
+.brand-name { font-family: var(--font-display); font-size: 19px; font-weight: 500; letter-spacing: 0.01em; }
+nav { display: flex; align-items: baseline; gap: 26px; font-size: 14px; }
+nav a { color: var(--grafitt); text-decoration: none; }
+nav a:hover { color: var(--gronn); }
+.lang-toggle { display: flex; gap: 2px; font-size: 13px; }
+.lang-toggle a { padding: 2px 7px; color: var(--grafitt); text-decoration: none; }
+.lang-toggle a.active { color: var(--papir); background: var(--blekk); border-radius: 3px; }
+
+.hero { padding: 56px 0 8px; max-width: 640px; }
+.hero h1 {
+  font-family: var(--font-display); font-size: 46px; font-weight: 400;
+  line-height: 1.15; margin-bottom: 16px;
+}
+.hero p { font-size: 16px; color: var(--blekk-lys); max-width: 520px; }
+
+.stat-band { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; padding: 40px 0 12px; }
+.stat { border-top: 1px solid var(--linje); padding-top: 12px; }
+.stat .value { font-family: var(--font-display); font-size: 34px; line-height: 1.2; }
+.stat .value.green { color: var(--gronn); }
+.stat .value .unit { font-size: 16px; }
+.stat .label { font-size: 13px; color: var(--grafitt); margin-top: 2px; }
+
+.map-section { display: grid; grid-template-columns: 1.55fr 1fr; gap: 36px; padding: 32px 0 0; align-items: start; }
+#map { display: block; width: 100%; height: 470px; }
+.port-dot { cursor: pointer; }
+.port-label { font-family: var(--font-display); font-style: italic; font-size: 12px; fill: var(--blekk); pointer-events: none; }
+.map-caption { font-size: 12px; color: var(--grafitt); font-style: italic; font-family: var(--font-display); margin-top: 6px; }
+
+.port-panel { border-left: 1px solid var(--linje); padding-left: 26px; min-height: 420px; }
+.pp-back {
+  display: inline-block; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--gronn); cursor: pointer; margin-bottom: 10px; user-select: none; background: none; border: none; font-family: inherit;
+}
+.pp-back:hover { text-decoration: underline; }
+.pp-eyebrow { font-size: 11px; color: var(--grafitt); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px; }
+.port-panel h3 { font-family: var(--font-display); font-size: 26px; font-weight: 400; margin-bottom: 2px; }
+.port-panel .since { font-size: 13px; color: var(--grafitt); margin-bottom: 18px; }
+.pp-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 14px; padding: 8px 0; border-bottom: 1px dotted var(--linje);
+}
+.pp-row .k { color: var(--grafitt); }
+.pp-row .v { font-family: var(--font-display); font-size: 17px; }
+.pp-row .v small { font-size: 12px; color: var(--grafitt); font-family: var(--font-body); }
+.dist-title { font-size: 11px; color: var(--grafitt); text-transform: uppercase; letter-spacing: 0.08em; margin: 20px 0 10px; }
+.dist-bars { display: flex; align-items: flex-end; gap: 5px; height: 56px; }
+.dist-bars div { flex: 1; background: var(--linje-lys); border-top: 1px solid var(--linje); }
+.dist-bars div.mid { background: #CDDCD2; border-top-color: #9DBCA9; }
+.dist-bars div.hi { background: var(--gronn); border-top-color: var(--gronn); }
+.dist-axis { display: flex; justify-content: space-between; font-size: 11px; color: var(--grafitt); margin-top: 5px; }
+.pp-hint { font-size: 13px; color: var(--grafitt); font-style: italic; font-family: var(--font-display); margin-top: 16px; }
+
+section.content { padding: 76px 0 0; }
+.eyebrow {
+  font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--gronn); margin-bottom: 12px;
+}
+section.content h2 { font-family: var(--font-display); font-size: 34px; font-weight: 400; margin-bottom: 16px; }
+section.content .wrap > p { font-size: 16px; max-width: 620px; color: var(--blekk-lys); }
+
+.timeline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; margin-top: 40px; }
+.tl { border-top: 1px solid var(--blekk); padding-top: 12px; }
+.tl.future { border-top: 1px dotted var(--linje); }
+.tl .year { font-family: var(--font-display); font-size: 20px; margin-bottom: 4px; }
+.tl p { font-size: 13.5px; color: var(--blekk-lys); line-height: 1.55; }
+
+.roles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; margin-top: 40px; }
+.role { border-top: 1px solid var(--blekk); padding-top: 12px; }
+.role .tag { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gronn); margin-bottom: 6px; }
+.role .who { font-family: var(--font-display); font-size: 21px; margin-bottom: 6px; }
+.role p { font-size: 13.5px; color: var(--blekk-lys); line-height: 1.55; }
+
+footer { margin-top: 88px; }
+.footer-inner {
+  border-top: 2px solid var(--blekk); padding: 20px 0 36px;
+  display: flex; justify-content: space-between; font-size: 13px; color: var(--grafitt);
+}
+
+@media (max-width: 900px) {
+  .wrap { padding: 0 20px; }
+  .hero h1 { font-size: 32px; }
+  .stat-band { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  .map-section { grid-template-columns: 1fr; }
+  .port-panel { border-left: none; border-top: 1px solid var(--linje); padding: 20px 0 0; min-height: 0; }
+  .timeline, .roles { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  #map { height: 380px; }
+}
+
+@media (max-width: 560px) {
+  .timeline, .roles { grid-template-columns: 1fr; }
+  .footer-inner { flex-direction: column; gap: 6px; }
+}
