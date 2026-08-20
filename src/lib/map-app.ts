@@ -4,7 +4,6 @@ import { t, type Lang } from './i18n';
 
 interface PortProps {
   name: string;
-  member_since: number;
   calls_ytd: number;
   avg_score: number;
   ops_share_pct: number;
@@ -122,7 +121,6 @@ export async function initMapApp(root: HTMLElement) {
       <button type="button" class="pp-back" id="ppBack">${t(lang, 'pp_back')}</button>
       <div class="pp-eyebrow">${t(lang, 'pp_eyebrow')}</div>
       <h3>${pr.name}</h3>
-      <div class="since">${t(lang, 'pp_since')} ${pr.member_since}</div>
       ${panelRows(pr)}`;
     panel.querySelector('#ppBack')?.addEventListener('click', () => select(null));
   }

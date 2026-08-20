@@ -1,6 +1,8 @@
 # Build static Astro site
 FROM node:20-alpine AS builder
 WORKDIR /app
+ARG PUBLIC_MAPBOX_TOKEN
+ENV PUBLIC_MAPBOX_TOKEN=$PUBLIC_MAPBOX_TOKEN
 COPY package.json package-lock.json* ./
 RUN npm install
 COPY . .
