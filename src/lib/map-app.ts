@@ -142,13 +142,21 @@ export async function initMapApp(root: HTMLElement) {
     new mapboxgl.LngLatBounds()
   );
 
+  // Fitting to `bounds` at construction time is unreliable if the container
+  // hasn't been laid out yet (e.g. web fonts still loading) -- Mapbox can't
+  // compute a valid initial camera/tile matrix, logs "Map cannot fit within
+  // canvas...", and never recovers (no tiles are ever requested, even after
+  // the container gets its real size). Construct with a fixed fallback view,
+  // then resize + fitBounds explicitly once the container is guaranteed to
+  // have real dimensions (on 'load').
   const map = new mapboxgl.Map({
     container: mapContainer,
     style: 'mapbox://styles/mapbox/light-v11',
-    bounds,
-    fitBoundsOptions: { padding: 48 },
+    center: [0, 55],
+    zoom: 2,
     attributionControl: false,
   });
+  map.on('error', (e) => console.error('MAPBOX ERROR', (e as any)?.error?.message || e));
   map.addControl(new mapboxgl.AttributionControl({ compact: true }));
   map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
 
@@ -172,6 +180,8 @@ export async function initMapApp(root: HTMLElement) {
   }
 
   map.on('load', () => {
+    map.resize();
+    map.fitBounds(bounds, { padding: 48, animate: false });
     simplifyBaseStyle(map);
 
     map.addSource('ports', {
