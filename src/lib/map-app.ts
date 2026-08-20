@@ -160,6 +160,25 @@ export async function initMapApp(root: HTMLElement) {
   map.addControl(new mapboxgl.AttributionControl({ compact: true }));
   map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
 
+  // Defensive: the canvas's WebGL viewport is sized from the container's
+  // dimensions at construction time, which can be stale in a CSS grid
+  // column if layout hasn't fully settled yet. Watching the real container
+  // size and resizing whenever it changes is more robust than a single
+  // point-in-time resize() call, even though the specific "blank basemap"
+  // bug reported in this session turned out to be an invalid Mapbox token,
+  // not a layout-timing issue.
+  let lastSize = '';
+  const resizeObserver = new ResizeObserver(() => {
+    const { width, height } = mapContainer.getBoundingClientRect();
+    const key = `${width}x${height}`;
+    if (width > 0 && height > 0 && key !== lastSize) {
+      lastSize = key;
+      map.resize();
+      map.triggerRepaint();
+    }
+  });
+  resizeObserver.observe(mapContainer);
+
   function labelFilter(): mapboxgl.FilterSpecification {
     const names = selected ? [...LABELLED, selected.properties.name] : LABELLED;
     return ['in', ['get', 'name'], ['literal', names]];
@@ -232,5 +251,7 @@ export async function initMapApp(root: HTMLElement) {
     });
 
     renderPanel(selected);
+    map.resize();
+    map.triggerRepaint();
   });
 }
