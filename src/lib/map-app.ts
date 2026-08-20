@@ -69,6 +69,7 @@ export async function initMapApp(root: HTMLElement) {
   ]);
 
   let selected: PortFeature | null = null;
+  let hovered: PortFeature | null = null;
 
   function renderStats() {
     statBand.innerHTML = `
@@ -180,7 +181,9 @@ export async function initMapApp(root: HTMLElement) {
   resizeObserver.observe(mapContainer);
 
   function labelFilter(): mapboxgl.FilterSpecification {
-    const names = selected ? [...LABELLED, selected.properties.name] : LABELLED;
+    const names = [...LABELLED];
+    if (selected) names.push(selected.properties.name);
+    if (hovered) names.push(hovered.properties.name);
     return ['in', ['get', 'name'], ['literal', names]];
   }
 
@@ -239,11 +242,20 @@ export async function initMapApp(root: HTMLElement) {
       },
     });
 
-    map.on('mouseenter', 'ports-circles', () => {
+    map.on('mousemove', 'ports-circles', (e) => {
       map.getCanvas().style.cursor = 'pointer';
+      const feature = e.features?.[0] as unknown as PortFeature | undefined;
+      if (feature && feature.properties.name !== hovered?.properties.name) {
+        hovered = feature;
+        map.setFilter('ports-labels', labelFilter());
+      }
     });
     map.on('mouseleave', 'ports-circles', () => {
       map.getCanvas().style.cursor = '';
+      if (hovered) {
+        hovered = null;
+        map.setFilter('ports-labels', labelFilter());
+      }
     });
     map.on('click', 'ports-circles', (e) => {
       const feature = e.features?.[0] as unknown as PortFeature | undefined;
