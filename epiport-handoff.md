@@ -84,8 +84,11 @@ Tokens (fra prototypens :root):
   forbrukstall og detaljert informasjon om skipets tekniske utrustning og
   operasjon ved kai. Energibruk og utslipp rapporteres per havneopphold.
   Dataene kvalitetskontrolleres av DNV.
-- **Tidslinje:** 2019 etablert · 2023 Island/Orknøyene · 2026 «27 aktive
-  havner» · 2027 metodikken videreføres i ESI (IKKE nevn EU MRV her)
+- **Tidslinje:** 2019 etablert · 2023 Island/Orknøyene · 2026 aktivt
+  nettverk av havner (tallet «27» var en plassholder – bruk ikke et
+  hardkodet tall her, siden det faktiske antallet (`active_ports` fra
+  `summary.json`) i praksis er høyere, se `generate_public_json.py`) ·
+  2027 metodikken videreføres i ESI (IKKE nevn EU MRV her)
 - **Roller (4):** EPI AS (metodikk-eier) · DNV (2019–2026, drift av
   IT-løsning samt kvalitetskontroll) · OceanScore (tag «drift»,
   videreføring av DNVs arbeid samkjørt med ESI, fra 2027) · IAPH/ESI
