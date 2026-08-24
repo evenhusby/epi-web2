@@ -8,6 +8,8 @@ const { lang } = Astro.props;
 ---
 
 <div id="mapApp" data-lang={lang}>
+  <div class="wrap map-exhibit-label">{t(lang, 'map_eyebrow')}</div>
+
   <div class="stat-strip">
     <div class="wrap stat-band" id="statBand"></div>
   </div>
@@ -19,6 +21,8 @@ const { lang } = Astro.props;
     </div>
     <div class="port-panel" id="portPanel"></div>
   </div>
+
+  <div class="wrap map-exhibit-end"></div>
 </div>
 
 <script>

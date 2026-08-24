@@ -44,7 +44,14 @@ nav a:hover { color: var(--gronn); }
 }
 .hero p { font-size: 16px; color: var(--blekk-lys); max-width: 520px; }
 
-.stat-strip { background: var(--blekk); }
+.map-exhibit-label {
+  border-top: 2px solid var(--blekk);
+  padding-top: 8px;
+  font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gronn);
+}
+.map-exhibit-end { border-bottom: 1px solid var(--linje); margin-top: 24px; }
+
+.stat-strip { background: var(--blekk); margin-top: 18px; }
 .stat-band { display: flex; padding: 18px 0; }
 .stat { flex: 1; padding: 0 22px; border-right: 1px solid rgba(253, 252, 249, 0.16); }
 .stat:first-child { padding-left: 0; }
