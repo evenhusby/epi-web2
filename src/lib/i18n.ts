@@ -4,7 +4,7 @@ export const dictionary = {
   no: {
     nav_about: 'Om EPI',
     nav_roles: 'Roller',
-    hero_h1: 'Skipets miljøprestasjon i havn',
+    hero_h1: 'Environmental Port Index (EPI)',
     hero_p: 'EPI beregner utslipp fra skip ved kai per anløp basert på detaljerte rapporter fra skipene.',
     stat_ports: 'aktive havner',
     stat_calls: 'anløp i år',
@@ -44,7 +44,7 @@ export const dictionary = {
   en: {
     nav_about: 'About EPI',
     nav_roles: 'Roles',
-    hero_h1: 'Ship environmental performance in port',
+    hero_h1: 'Environmental Port Index (EPI)',
     hero_p: 'EPI calculates emissions from ships at berth per port call, based on detailed reports from the ships.',
     stat_ports: 'active ports',
     stat_calls: 'port calls YTD',

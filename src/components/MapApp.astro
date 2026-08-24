@@ -8,7 +8,9 @@ const { lang } = Astro.props;
 ---
 
 <div id="mapApp" data-lang={lang}>
-  <div class="wrap stat-band" id="statBand"></div>
+  <div class="stat-strip">
+    <div class="wrap stat-band" id="statBand"></div>
+  </div>
 
   <div class="wrap map-section">
     <div>
