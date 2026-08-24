@@ -19,7 +19,9 @@ const { lang } = Astro.props;
   <body>
     <header>
       <div class="wrap header-inner">
-        <span class="brand-name">Environmental Port Index</span>
+        <a href={lang === 'en' ? '/en/' : '/'} class="brand-logo">
+          <img src="/brand/epi-logo.png" alt="EPI — Environmental Port Index" height="36" />
+        </a>
         <nav>
           <a href="#om">{t(lang, 'nav_about')}</a>
           <a href="#roller">{t(lang, 'nav_roles')}</a>

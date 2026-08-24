@@ -4,7 +4,6 @@ import { t, type Lang } from './i18n';
 
 interface PortProps {
   name: string;
-  member_since: number;
   calls_ytd: number;
   avg_score: number;
   ops_share_pct: number;
@@ -70,6 +69,7 @@ export async function initMapApp(root: HTMLElement) {
   ]);
 
   let selected: PortFeature | null = null;
+  let hovered: PortFeature | null = null;
 
   function renderStats() {
     statBand.innerHTML = `
@@ -122,7 +122,6 @@ export async function initMapApp(root: HTMLElement) {
       <button type="button" class="pp-back" id="ppBack">${t(lang, 'pp_back')}</button>
       <div class="pp-eyebrow">${t(lang, 'pp_eyebrow')}</div>
       <h3>${pr.name}</h3>
-      <div class="since">${t(lang, 'pp_since')} ${pr.member_since}</div>
       ${panelRows(pr)}`;
     panel.querySelector('#ppBack')?.addEventListener('click', () => select(null));
   }
@@ -144,18 +143,47 @@ export async function initMapApp(root: HTMLElement) {
     new mapboxgl.LngLatBounds()
   );
 
+  // Fitting to `bounds` at construction time is unreliable if the container
+  // hasn't been laid out yet (e.g. web fonts still loading) -- Mapbox can't
+  // compute a valid initial camera/tile matrix, logs "Map cannot fit within
+  // canvas...", and never recovers (no tiles are ever requested, even after
+  // the container gets its real size). Construct with a fixed fallback view,
+  // then resize + fitBounds explicitly once the container is guaranteed to
+  // have real dimensions (on 'load').
   const map = new mapboxgl.Map({
     container: mapContainer,
     style: 'mapbox://styles/mapbox/light-v11',
-    bounds,
-    fitBoundsOptions: { padding: 48 },
+    center: [0, 55],
+    zoom: 2,
     attributionControl: false,
   });
+  map.on('error', (e) => console.error('MAPBOX ERROR', (e as any)?.error?.message || e));
   map.addControl(new mapboxgl.AttributionControl({ compact: true }));
   map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right');
 
+  // Defensive: the canvas's WebGL viewport is sized from the container's
+  // dimensions at construction time, which can be stale in a CSS grid
+  // column if layout hasn't fully settled yet. Watching the real container
+  // size and resizing whenever it changes is more robust than a single
+  // point-in-time resize() call, even though the specific "blank basemap"
+  // bug reported in this session turned out to be an invalid Mapbox token,
+  // not a layout-timing issue.
+  let lastSize = '';
+  const resizeObserver = new ResizeObserver(() => {
+    const { width, height } = mapContainer.getBoundingClientRect();
+    const key = `${width}x${height}`;
+    if (width > 0 && height > 0 && key !== lastSize) {
+      lastSize = key;
+      map.resize();
+      map.triggerRepaint();
+    }
+  });
+  resizeObserver.observe(mapContainer);
+
   function labelFilter(): mapboxgl.FilterSpecification {
-    const names = selected ? [...LABELLED, selected.properties.name] : LABELLED;
+    const names = [...LABELLED];
+    if (selected) names.push(selected.properties.name);
+    if (hovered) names.push(hovered.properties.name);
     return ['in', ['get', 'name'], ['literal', names]];
   }
 
@@ -174,6 +202,8 @@ export async function initMapApp(root: HTMLElement) {
   }
 
   map.on('load', () => {
+    map.resize();
+    map.fitBounds(bounds, { padding: 48, animate: false });
     simplifyBaseStyle(map);
 
     map.addSource('ports', {
@@ -212,11 +242,20 @@ export async function initMapApp(root: HTMLElement) {
       },
     });
 
-    map.on('mouseenter', 'ports-circles', () => {
+    map.on('mousemove', 'ports-circles', (e) => {
       map.getCanvas().style.cursor = 'pointer';
+      const feature = e.features?.[0] as unknown as PortFeature | undefined;
+      if (feature && feature.properties.name !== hovered?.properties.name) {
+        hovered = feature;
+        map.setFilter('ports-labels', labelFilter());
+      }
     });
     map.on('mouseleave', 'ports-circles', () => {
       map.getCanvas().style.cursor = '';
+      if (hovered) {
+        hovered = null;
+        map.setFilter('ports-labels', labelFilter());
+      }
     });
     map.on('click', 'ports-circles', (e) => {
       const feature = e.features?.[0] as unknown as PortFeature | undefined;
@@ -224,5 +263,7 @@ export async function initMapApp(root: HTMLElement) {
     });
 
     renderPanel(selected);
+    map.resize();
+    map.triggerRepaint();
   });
 }

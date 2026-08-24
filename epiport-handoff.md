@@ -53,7 +53,7 @@ const PORTS   = await (await fetch('/api/ports.geojson')).json();
 ```
 
 `ports.geojson`: FeatureCollection av Point-features med properties:
-`name`, `member_since`, `calls_ytd`, `avg_score`, `ops_share_pct`,
+`name`, `calls_ytd`, `avg_score`, `ops_share_pct`,
 `nox_reduced_ytd`, `score_distribution` (array[4]: band 0–30, 30–50,
 50–70, 70–100). Per-havn-aggregater ligger i properties slik at panelet
 ikke trenger eget API-kall. ALLE tall i prototypen er fiktive plassholdere.
@@ -84,8 +84,11 @@ Tokens (fra prototypens :root):
   forbrukstall og detaljert informasjon om skipets tekniske utrustning og
   operasjon ved kai. Energibruk og utslipp rapporteres per havneopphold.
   Dataene kvalitetskontrolleres av DNV.
-- **Tidslinje:** 2019 etablert · 2023 Island/Orknøyene · 2026 «27 aktive
-  havner» · 2027 metodikken videreføres i ESI (IKKE nevn EU MRV her)
+- **Tidslinje:** 2019 etablert · 2023 Island/Orknøyene · 2026 aktivt
+  nettverk av havner (tallet «27» var en plassholder – bruk ikke et
+  hardkodet tall her, siden det faktiske antallet (`active_ports` fra
+  `summary.json`) i praksis er høyere, se `generate_public_json.py`) ·
+  2027 metodikken videreføres i ESI (IKKE nevn EU MRV her)
 - **Roller (4):** EPI AS (metodikk-eier) · DNV (2019–2026, drift av
   IT-løsning samt kvalitetskontroll) · OceanScore (tag «drift»,
   videreføring av DNVs arbeid samkjørt med ESI, fra 2027) · IAPH/ESI
@@ -104,11 +107,29 @@ Tokens (fra prototypens :root):
 3. **Rolletekster:** Hold formuleringer om eierskap/struktur åpne til
    MOA er signert. «Metodikken videreføres i ESI» er valgt fordi den er
    sann uavhengig av utfall.
-4. SQL/jobb som genererer de to JSON-filene fra epi_v2 er ikke skrevet.
-5. Natural Earth-kystlinjer / MapLibre ikke implementert.
+4. ~~SQL/jobb som genererer de to JSON-filene fra epi_v2 er ikke skrevet.~~
+   Løst: `tools/generate_public_json.py` speiler nå epi-pilot-repos
+   `stats.py`-logikk (scrubber-bevisst SOx, Tier I NOx-baseline, `reduced =
+   max(0, baseline − actual)`). Ikke kjørt i produksjon ennå – se punkt 8
+   under om dataleveranse til site-tjenesten.
+5. Natural Earth-kystlinjer / MapLibre ikke implementert. (Kartet er siden
+   byttet til Mapbox GL JS med ekte fliser – se README.)
 6. Redirect-kart fra gamle URL-er ikke laget.
 7. Havnelisten i prototypen (17 stk) er et utvalg – fullstendig liste og
-   koordinater bør hentes fra databasen/WPI.
+   koordinater bør hentes fra databasen/WPI. `generate_public_json.py`
+   henter nå faktisk alle `epi_v2.ports`-rader (filtrert på
+   `is_test=false AND is_pilot=false`), så dette løses automatisk når
+   jobben kjøres mot ekte data.
+8. `member_since` er fjernet fra datakontrakten – epi_v2 har ikke noe
+   medlemskaps-/innmeldingsdato-felt (`ports.created_at` er kun en
+   synk-jobb-tidsstempel, ikke en kuratert dato), og heller ikke noe
+   fungerte tredjepartskilde ble funnet. Legg til på nytt kun hvis noen
+   leverer ekte data for dette.
+9. Site- og cron-tjenesten kjører i separate Railway-containere med
+   ephemeral filsystem – `generate_public_json.py` sine filer når ikke
+   frem til den kjørende site-tjenesten før dette er koblet sammen
+   (Volume + lese-API, eller commit-tilbake-til-repo). Se docstringen i
+   scriptet.
 
 ## Forslag til første Claude Code-økter
 1. Init repo (velg Astro eller Vite), porter prototypen inn i valgt struktur,
