@@ -7,22 +7,24 @@ interface Props {
 const { lang } = Astro.props;
 ---
 
-<div id="mapApp" data-lang={lang}>
-  <div class="wrap map-exhibit-label">{t(lang, 'map_eyebrow')}</div>
+<div id="mapApp" data-lang={lang} class="map-exhibit-frame">
+  <div class="wrap">
+    <div class="map-card">
+      <div class="map-card-label">{t(lang, 'map_eyebrow')}</div>
 
-  <div class="stat-strip">
-    <div class="wrap stat-band" id="statBand"></div>
-  </div>
+      <div class="stat-strip">
+        <div class="stat-band" id="statBand"></div>
+      </div>
 
-  <div class="wrap map-section">
-    <div>
-      <div id="map"></div>
-      <div class="map-caption">{t(lang, 'map_caption')}</div>
+      <div class="map-section">
+        <div>
+          <div id="map"></div>
+          <div class="map-caption">{t(lang, 'map_caption')}</div>
+        </div>
+        <div class="port-panel" id="portPanel"></div>
+      </div>
     </div>
-    <div class="port-panel" id="portPanel"></div>
   </div>
-
-  <div class="wrap map-exhibit-end"></div>
 </div>
 
 <script>
