@@ -242,23 +242,50 @@ export async function initMapApp(root: HTMLElement) {
       },
     });
 
-    map.on('mousemove', 'ports-circles', (e) => {
-      map.getCanvas().style.cursor = 'pointer';
-      const feature = e.features?.[0] as unknown as PortFeature | undefined;
-      if (feature && feature.properties.name !== hovered?.properties.name) {
-        hovered = feature;
+    // Ports render as 5-6.5px dots -- exact-pixel hit-testing (the
+    // 'ports-circles'-scoped event form) makes them genuinely hard to hit,
+    // especially zoomed out to the full North Atlantic. Query a padded box
+    // around the pointer instead and take the nearest feature, so the
+    // effective tap target is bigger than the visible dot without changing
+    // how it looks.
+    const HIT_PADDING_PX = 10;
+    function nearestPortAt(point: mapboxgl.Point): PortFeature | undefined {
+      const box: [mapboxgl.PointLike, mapboxgl.PointLike] = [
+        [point.x - HIT_PADDING_PX, point.y - HIT_PADDING_PX],
+        [point.x + HIT_PADDING_PX, point.y + HIT_PADDING_PX],
+      ];
+      const candidates = map.queryRenderedFeatures(box, { layers: ['ports-circles'] }) as unknown as PortFeature[];
+      if (candidates.length <= 1) return candidates[0];
+      let closest = candidates[0];
+      let closestDist = Infinity;
+      for (const c of candidates) {
+        const px = map.project(c.geometry.coordinates as [number, number]);
+        const dist = (px.x - point.x) ** 2 + (px.y - point.y) ** 2;
+        if (dist < closestDist) {
+          closestDist = dist;
+          closest = c;
+        }
+      }
+      return closest;
+    }
+
+    map.on('mousemove', (e) => {
+      const feature = nearestPortAt(e.point);
+      map.getCanvas().style.cursor = feature ? 'pointer' : '';
+      if (feature?.properties.name !== hovered?.properties.name) {
+        hovered = feature ?? null;
         map.setFilter('ports-labels', labelFilter());
       }
     });
-    map.on('mouseleave', 'ports-circles', () => {
+    map.on('mouseout', () => {
       map.getCanvas().style.cursor = '';
       if (hovered) {
         hovered = null;
         map.setFilter('ports-labels', labelFilter());
       }
     });
-    map.on('click', 'ports-circles', (e) => {
-      const feature = e.features?.[0] as unknown as PortFeature | undefined;
+    map.on('click', (e) => {
+      const feature = nearestPortAt(e.point);
       if (feature) select(feature);
     });
 
