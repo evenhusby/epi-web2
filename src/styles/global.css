@@ -63,7 +63,6 @@ nav a:hover { color: var(--gronn); }
 
 .map-section { display: grid; grid-template-columns: 1.55fr 1fr; gap: 36px; align-items: start; }
 #map { display: block; width: 100%; height: 300px; }
-.map-caption { font-size: 12px; color: var(--grafitt); font-style: italic; font-family: var(--font-display); margin-top: 6px; }
 
 .port-panel { border-left: 1px solid var(--linje); padding-left: 26px; min-height: 300px; }
 .pp-back {
