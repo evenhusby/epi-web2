@@ -55,16 +55,19 @@ job against epi_v2 directly (see below), not fetched from those APIs.
 
 ## Deploy (Railway)
 
-Mirrors the `evenhusby/epi-pilot` repo's Railway config-as-code pattern:
+The `site` service is connected directly to this repo (`evenhusby/epi-web2`
+@ `main`) as its source and auto-deploys on push, building via Railway's
+own Railpack detection (not a repo Dockerfile — an earlier `railway.toml` +
+`Dockerfile` pair mirroring epi-pilot's config-as-code pattern was removed
+once the GitHub-source connection made them dead code).
 
-- `railway.toml` + `Dockerfile` — the static site service (build with
-  `npm run build`, serve `dist/` via `serve`).
-- `railway.cron.toml` + `Dockerfile.cron` + `tools/generate_public_json.py`
-  — a nightly job scaffold for the epi_v2 export. **Not wired end-to-end
-  yet** — see the docstring in `generate_public_json.py` for what's left
-  (real epi_v2 queries, and a decision on how the generated files reach
-  the live site: shared Volume + small read API, or a data-only commit
-  that triggers a rebuild).
+`railway.cron.toml` + `Dockerfile.cron` + `tools/generate_public_json.py`
+remain as a nightly job scaffold for the epi_v2 export, for a separate
+Railway service that hasn't been created yet. **Not wired end-to-end** —
+see the docstring in `generate_public_json.py` for what's left (real
+epi_v2 queries, and a decision on how the generated files reach the live
+site: shared Volume + small read API, or a data-only commit that triggers
+a rebuild).
 
 No hardcoded Railway tokens or project/service IDs in this repo — set
 `RAILWAY_API_TOKEN` etc. as Railway environment variables if/when the
