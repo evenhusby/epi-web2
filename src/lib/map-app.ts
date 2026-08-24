@@ -5,10 +5,13 @@ import { t, type Lang } from './i18n';
 interface PortProps {
   name: string;
   calls_ytd: number;
-  avg_score: number;
+  // Null for a port with no scored stays yet (e.g. zero calls this year) --
+  // real state from generate_public_json.py, not a bug. Render as "no data
+  // yet", not a crash.
+  avg_score: number | null;
   ops_share_pct: number;
   nox_reduced_ytd: number;
-  score_distribution: [number, number, number, number];
+  score_distribution: [number, number, number, number] | null;
 }
 
 type PortFeature = GeoJSON.Feature<GeoJSON.Point, PortProps>;
@@ -37,12 +40,14 @@ const COLOR_BLEKK = '#26332F';
 // look needs to be tighter than this gets it.
 const NOISY_LAYER_PATTERN = /poi|transit|building|road-label|road-number|road-exit|path-pedestrian|contour|hillshade|natural-line-label|water-line-label|water-point-label/i;
 
-function distBars(dist: number[]): string {
+function distBars(dist: number[] | null): string {
+  if (!dist) return '';
   const maxBand = Math.max(...dist);
   return dist
     .map((v, i) => {
       const cls = i === 3 ? 'hi' : i === 2 ? 'mid' : '';
-      return `<div class="${cls}" style="height:${Math.round((v / maxBand) * 100)}%"></div>`;
+      const pct = maxBand > 0 ? Math.round((v / maxBand) * 100) : 0;
+      return `<div class="${cls}" style="height:${pct}%"></div>`;
     })
     .join('');
 }
@@ -68,6 +73,14 @@ export async function initMapApp(root: HTMLElement) {
     fetch('/api/ports.geojson').then((r) => r.json()),
   ]);
 
+  // Mapbox GL tiles GeoJSON sources internally (geojson-vt), which only
+  // supports scalar properties: array-valued properties (score_distribution)
+  // come back JSON-stringified, and null-valued ones (avg_score) come back
+  // as missing, when read from click/hover event features. So use those
+  // events only to identify *which* port by name, then look up the real,
+  // correctly-typed object from our own parsed data.
+  const portsByName = new Map(ports.features.map((f) => [f.properties.name, f]));
+
   let selected: PortFeature | null = null;
   let hovered: PortFeature | null = null;
 
@@ -82,10 +95,14 @@ export async function initMapApp(root: HTMLElement) {
   function aggregateAll() {
     const fs = ports.features;
     const totalCalls = fs.reduce((s, f) => s + f.properties.calls_ytd, 0);
-    const wScore = fs.reduce((s, f) => s + f.properties.avg_score * f.properties.calls_ytd, 0) / totalCalls;
-    const wOps = fs.reduce((s, f) => s + f.properties.ops_share_pct * f.properties.calls_ytd, 0) / totalCalls;
+    // Weight only ports that actually have a score -- a null avg_score is
+    // "no scored stays yet", not a zero, and shouldn't drag the average down.
+    const scored = fs.filter((f) => f.properties.avg_score != null && f.properties.calls_ytd > 0);
+    const scoredCalls = scored.reduce((s, f) => s + f.properties.calls_ytd, 0);
+    const wScore = scoredCalls > 0 ? scored.reduce((s, f) => s + f.properties.avg_score! * f.properties.calls_ytd, 0) / scoredCalls : null;
+    const wOps = totalCalls > 0 ? fs.reduce((s, f) => s + f.properties.ops_share_pct * f.properties.calls_ytd, 0) / totalCalls : 0;
     const dist = [0, 0, 0, 0];
-    fs.forEach((f) => f.properties.score_distribution.forEach((v, i) => (dist[i] += v)));
+    fs.forEach((f) => f.properties.score_distribution?.forEach((v, i) => (dist[i] += v)));
     return {
       calls_ytd: summary.port_calls_ytd,
       avg_score: wScore,
@@ -95,10 +112,10 @@ export async function initMapApp(root: HTMLElement) {
     };
   }
 
-  function panelRows(a: { calls_ytd: number; avg_score: number; ops_share_pct: number; nox_reduced_ytd: number; score_distribution: number[] }) {
+  function panelRows(a: { calls_ytd: number; avg_score: number | null; ops_share_pct: number; nox_reduced_ytd: number; score_distribution: number[] | null }) {
     return `
       <div class="pp-row"><span class="k">${t(lang, 'pp_calls')}</span><span class="v">${nf().format(a.calls_ytd)}</span></div>
-      <div class="pp-row"><span class="k">${t(lang, 'pp_score')}</span><span class="v">${a.avg_score.toFixed(1)}</span></div>
+      <div class="pp-row"><span class="k">${t(lang, 'pp_score')}</span><span class="v">${a.avg_score != null ? a.avg_score.toFixed(1) : '–'}</span></div>
       <div class="pp-row"><span class="k">${t(lang, 'pp_ops')}</span><span class="v">${a.ops_share_pct} <small>%</small></span></div>
       <div class="pp-row"><span class="k">${t(lang, 'pp_nox')}</span><span class="v">${nf().format(a.nox_reduced_ytd)} <small>${t(lang, 'tonnes')}</small></span></div>
       <div class="dist-title">${t(lang, 'pp_dist')}</div>
@@ -258,11 +275,16 @@ export async function initMapApp(root: HTMLElement) {
       },
     });
 
+    function portAt(e: mapboxgl.MapMouseEvent & { features?: mapboxgl.MapboxGeoJSONFeature[] }): PortFeature | undefined {
+      const name = e.features?.[0]?.properties?.name as string | undefined;
+      return name ? portsByName.get(name) : undefined;
+    }
+
     map.on('mouseenter', 'ports-hit', () => {
       map.getCanvas().style.cursor = 'pointer';
     });
     map.on('mousemove', 'ports-hit', (e) => {
-      const feature = e.features?.[0] as unknown as PortFeature | undefined;
+      const feature = portAt(e);
       if (feature && feature.properties.name !== hovered?.properties.name) {
         hovered = feature;
         map.setFilter('ports-labels', labelFilter());
@@ -276,16 +298,8 @@ export async function initMapApp(root: HTMLElement) {
       }
     });
     map.on('click', 'ports-hit', (e) => {
-      const feature = e.features?.[0] as unknown as PortFeature | undefined;
-      console.debug('[epi-map] click on ports-hit ->', feature?.properties.name ?? '(no feature in event)');
+      const feature = portAt(e);
       if (feature) select(feature);
-    });
-    // Diagnostic only: confirms clicks reach the map at all, separate from
-    // whether the layer-scoped handler above matched a feature. Safe to
-    // remove once port selection is confirmed working end to end.
-    map.on('click', (e) => {
-      const hits = map.queryRenderedFeatures(e.point, { layers: ['ports-hit'] });
-      console.debug('[epi-map] map click at', e.point, '-> ports-hit query found', hits.length, 'feature(s)');
     });
 
     renderPanel(selected);
