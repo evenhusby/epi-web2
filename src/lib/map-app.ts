@@ -224,6 +224,22 @@ export async function initMapApp(root: HTMLElement) {
       },
     });
 
+    // Ports render as 5-6.5px dots, which is a hard target to hit precisely
+    // zoomed out to the whole North Atlantic. Standard Mapbox fix: a larger,
+    // fully transparent circle layer purely for hit-testing, with the real
+    // dot drawn on top -- layer-scoped mouseenter/mouseleave/click events on
+    // *this* layer, same idiom as any interactive point layer.
+    map.addLayer({
+      id: 'ports-hit',
+      type: 'circle',
+      source: 'ports',
+      paint: {
+        'circle-radius': 14,
+        'circle-opacity': 0,
+        'circle-stroke-opacity': 0,
+      },
+    });
+
     map.addLayer({
       id: 'ports-labels',
       type: 'symbol',
@@ -242,51 +258,34 @@ export async function initMapApp(root: HTMLElement) {
       },
     });
 
-    // Ports render as 5-6.5px dots -- exact-pixel hit-testing (the
-    // 'ports-circles'-scoped event form) makes them genuinely hard to hit,
-    // especially zoomed out to the full North Atlantic. Query a padded box
-    // around the pointer instead and take the nearest feature, so the
-    // effective tap target is bigger than the visible dot without changing
-    // how it looks.
-    const HIT_PADDING_PX = 10;
-    function nearestPortAt(point: mapboxgl.Point): PortFeature | undefined {
-      const box: [mapboxgl.PointLike, mapboxgl.PointLike] = [
-        [point.x - HIT_PADDING_PX, point.y - HIT_PADDING_PX],
-        [point.x + HIT_PADDING_PX, point.y + HIT_PADDING_PX],
-      ];
-      const candidates = map.queryRenderedFeatures(box, { layers: ['ports-circles'] }) as unknown as PortFeature[];
-      if (candidates.length <= 1) return candidates[0];
-      let closest = candidates[0];
-      let closestDist = Infinity;
-      for (const c of candidates) {
-        const px = map.project(c.geometry.coordinates as [number, number]);
-        const dist = (px.x - point.x) ** 2 + (px.y - point.y) ** 2;
-        if (dist < closestDist) {
-          closestDist = dist;
-          closest = c;
-        }
-      }
-      return closest;
-    }
-
-    map.on('mousemove', (e) => {
-      const feature = nearestPortAt(e.point);
-      map.getCanvas().style.cursor = feature ? 'pointer' : '';
-      if (feature?.properties.name !== hovered?.properties.name) {
-        hovered = feature ?? null;
+    map.on('mouseenter', 'ports-hit', () => {
+      map.getCanvas().style.cursor = 'pointer';
+    });
+    map.on('mousemove', 'ports-hit', (e) => {
+      const feature = e.features?.[0] as unknown as PortFeature | undefined;
+      if (feature && feature.properties.name !== hovered?.properties.name) {
+        hovered = feature;
         map.setFilter('ports-labels', labelFilter());
       }
     });
-    map.on('mouseout', () => {
+    map.on('mouseleave', 'ports-hit', () => {
       map.getCanvas().style.cursor = '';
       if (hovered) {
         hovered = null;
         map.setFilter('ports-labels', labelFilter());
       }
     });
-    map.on('click', (e) => {
-      const feature = nearestPortAt(e.point);
+    map.on('click', 'ports-hit', (e) => {
+      const feature = e.features?.[0] as unknown as PortFeature | undefined;
+      console.debug('[epi-map] click on ports-hit ->', feature?.properties.name ?? '(no feature in event)');
       if (feature) select(feature);
+    });
+    // Diagnostic only: confirms clicks reach the map at all, separate from
+    // whether the layer-scoped handler above matched a feature. Safe to
+    // remove once port selection is confirmed working end to end.
+    map.on('click', (e) => {
+      const hits = map.queryRenderedFeatures(e.point, { layers: ['ports-hit'] });
+      console.debug('[epi-map] map click at', e.point, '-> ports-hit query found', hits.length, 'feature(s)');
     });
 
     renderPanel(selected);
