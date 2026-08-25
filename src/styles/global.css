@@ -61,8 +61,8 @@ nav a:hover { color: var(--gronn); }
 .stat .value .unit { font-size: 12px; font-family: var(--font-body); opacity: 0.7; }
 .stat .label { font-size: 11.5px; color: rgba(253, 252, 249, 0.62); margin-top: 2px; }
 
-.map-section { display: grid; grid-template-columns: 1.55fr 1fr; gap: 36px; align-items: center; }
-#map { display: block; width: 100%; height: 300px; }
+.map-section { display: grid; grid-template-columns: 1.55fr 1fr; gap: 36px; align-items: stretch; }
+#map { display: block; width: 100%; height: 100%; min-height: 300px; }
 
 .port-panel { border-left: 1px solid var(--linje); padding-left: 26px; min-height: 300px; }
 .pp-back {
@@ -122,7 +122,7 @@ footer { margin-top: 88px; }
   .map-section { grid-template-columns: 1fr; }
   .port-panel { border-left: none; border-top: 1px solid var(--linje); padding: 20px 0 0; min-height: 0; }
   .timeline, .roles { grid-template-columns: repeat(2, 1fr); gap: 20px; }
-  #map { height: 260px; }
+  #map { height: 260px; min-height: 0; }
 }
 
 @media (max-width: 560px) {
