@@ -37,12 +37,12 @@ nav a:hover { color: var(--gronn); }
 .lang-toggle a { padding: 2px 7px; color: var(--grafitt); text-decoration: none; }
 .lang-toggle a.active { color: var(--papir); background: var(--blekk); border-radius: 3px; }
 
-.hero { padding: 56px 0 24px; max-width: 640px; }
+.hero { padding: 56px 0 24px; max-width: 900px; }
 .hero h1 {
   font-family: var(--font-display); font-size: 46px; font-weight: 400;
   line-height: 1.15; margin-bottom: 16px;
 }
-.hero p { font-size: 16px; color: var(--blekk-lys); max-width: 520px; }
+.hero p { font-size: 16px; color: var(--blekk-lys); max-width: 640px; }
 
 .map-exhibit-frame { background: var(--sjo); padding: 36px 0; margin-top: 18px; }
 .map-card { background: var(--papir); border: 1px solid var(--linje); padding: 26px; }
@@ -61,7 +61,7 @@ nav a:hover { color: var(--gronn); }
 .stat .value .unit { font-size: 12px; font-family: var(--font-body); opacity: 0.7; }
 .stat .label { font-size: 11.5px; color: rgba(253, 252, 249, 0.62); margin-top: 2px; }
 
-.map-section { display: grid; grid-template-columns: 1.55fr 1fr; gap: 36px; align-items: start; }
+.map-section { display: grid; grid-template-columns: 1.55fr 1fr; gap: 36px; align-items: center; }
 #map { display: block; width: 100%; height: 300px; }
 
 .port-panel { border-left: 1px solid var(--linje); padding-left: 26px; min-height: 300px; }
