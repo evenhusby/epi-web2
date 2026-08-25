@@ -4,7 +4,7 @@ export default defineConfig({
   site: 'https://epiport.org',
   i18n: {
     locales: ['no', 'en'],
-    defaultLocale: 'no',
+    defaultLocale: 'en',
     routing: {
       prefixDefaultLocale: false,
     },
