@@ -7,7 +7,9 @@ interface Props {
 const { lang } = Astro.props;
 ---
 
-<div class="wrap hero">
-  <h1>{t(lang, 'hero_h1')}</h1>
-  <p>{t(lang, 'hero_p')}</p>
+<div class="wrap">
+  <div class="hero">
+    <h1>{t(lang, 'hero_h1')}</h1>
+    <p>{t(lang, 'hero_p')}</p>
+  </div>
 </div>

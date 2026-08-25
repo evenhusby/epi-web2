@@ -18,27 +18,31 @@ const { lang } = Astro.props;
   </head>
   <body>
     <header>
-      <div class="wrap header-inner">
-        <a href={lang === 'en' ? '/en/' : '/'} class="brand-logo">
-          <img src="/brand/epi-logo.png" alt="EPI — Environmental Port Index" height="36" />
-        </a>
-        <nav>
-          <a href="#om">{t(lang, 'nav_about')}</a>
-          <a href="#roller">{t(lang, 'nav_roles')}</a>
-          <div class="lang-toggle">
-            <a href="/" class:list={{ active: lang === 'no' }} aria-current={lang === 'no' ? 'page' : undefined}>NO</a>
-            <a href="/en/" class:list={{ active: lang === 'en' }} aria-current={lang === 'en' ? 'page' : undefined}>EN</a>
-          </div>
-        </nav>
+      <div class="wrap">
+        <div class="header-inner">
+          <a href={lang === 'en' ? '/en/' : '/'} class="brand-logo">
+            <img src="/brand/epi-logo.png" alt="EPI — Environmental Port Index" height="36" />
+          </a>
+          <nav>
+            <a href="#om">{t(lang, 'nav_about')}</a>
+            <a href="#roller">{t(lang, 'nav_roles')}</a>
+            <div class="lang-toggle">
+              <a href="/" class:list={{ active: lang === 'no' }} aria-current={lang === 'no' ? 'page' : undefined}>NO</a>
+              <a href="/en/" class:list={{ active: lang === 'en' }} aria-current={lang === 'en' ? 'page' : undefined}>EN</a>
+            </div>
+          </nav>
+        </div>
       </div>
     </header>
 
     <slot />
 
     <footer>
-      <div class="wrap footer-inner">
-        <span>info@epiport.org · Bergen Havn, Nøstegaten 30, 5006 Bergen</span>
-        <span>{t(lang, 'footer_r')}</span>
+      <div class="wrap">
+        <div class="footer-inner">
+          <span>info@epiport.org · Bergen Havn, Nøstegaten 30, 5006 Bergen</span>
+          <span>{t(lang, 'footer_r')}</span>
+        </div>
       </div>
     </footer>
   </body>
