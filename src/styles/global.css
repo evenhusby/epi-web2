@@ -37,12 +37,12 @@ nav a:hover { color: var(--gronn); }
 .lang-toggle a { padding: 2px 7px; color: var(--grafitt); text-decoration: none; }
 .lang-toggle a.active { color: var(--papir); background: var(--blekk); border-radius: 3px; }
 
-.hero { padding: 56px 0 24px; max-width: 900px; }
+.hero { padding: 56px 0 24px; }
 .hero h1 {
   font-family: var(--font-display); font-size: 46px; font-weight: 400;
   line-height: 1.15; margin-bottom: 16px;
 }
-.hero p { font-size: 16px; color: var(--blekk-lys); max-width: 640px; }
+.hero p { font-size: 16px; color: var(--blekk-lys); }
 
 .map-exhibit-frame { background: var(--sjo); padding: 36px 0; margin-top: 18px; }
 .map-card { background: var(--papir); border: 1px solid var(--linje); padding: 26px; }
